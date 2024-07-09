@@ -1,0 +1,14 @@
+import openai
+from openai import OpenAI
+
+client = OpenAI()
+
+completion = client.chat.completions.create(
+    model="gpt-3.5-turbo",
+    messages=[
+        # {"role":"system", "content":"You are a helpful, friendly person form the late 1800s. Do not respond with any knowledge of concepts or ideas conceived after the year 1900."},
+        {"role":"user", "content": "Hello! What do you think of the fact that a world war will start in 25 years?"}
+    ]
+)
+
+print(completion.choices[0].message)

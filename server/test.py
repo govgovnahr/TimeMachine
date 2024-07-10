@@ -1,6 +1,25 @@
 import requests
 import json
+from flask import Flask, request, jsonify
+from flask_cors import CORS
 
+app = Flask(__name__)
+CORS(app)
+# CORS(app, resources={r"/api/*": {"origins": "*"}})
+# @app.route("/members")
+# def members():
+#     return {"members": ["Member1","Member2","Member3"]}im 
+
+@app.route("/api/send", methods=["POST"])
+def processInput():
+    data = request.json
+    print("Received data:", data)
+    
+    return jsonify({"message": "Data received successfully!    " + data }), 200
+
+
+if __name__ == "__main__":
+    app.run(debug=True, port=5000)
  
 def askQuestion(text,context):
     url = 'http://localhost:11434/api/chat'
@@ -27,11 +46,12 @@ def askQuestion(text,context):
     context.append({"role": "assistant", "content":finalAnswer})
     
     return context
-context = []
-while True:
-    text = input("\nsend a message:  ")
-    if text == "bye":
-        break
-    if text == "new":
-        context = []
-    context = askQuestion(text, context)
+
+# context = []
+# while True:
+#     text = input("\nsend a message:  ")
+#     if text == "bye":
+#         break
+#     if text == "new":
+#         context = []
+#     context = askQuestion(text, context)

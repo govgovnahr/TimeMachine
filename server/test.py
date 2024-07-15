@@ -1,32 +1,16 @@
 import requests
 import json
 from flask import Flask, request, jsonify
-from flask_cors import CORS
-
-app = Flask(__name__)
-CORS(app)
-# CORS(app, resources={r"/api/*": {"origins": "*"}})
-# @app.route("/members")
-# def members():
-#     return {"members": ["Member1","Member2","Member3"]}im 
-
-@app.route("/api/send", methods=["POST"])
-def processInput():
-    data = request.json
-    print("Received data:", data)
-    
-    return jsonify({"message": "Data received successfully!    " + data }), 200
+from flask_cors import CORS, cross_origin
 
 
-if __name__ == "__main__":
-    app.run(debug=True, port=5000)
- 
+
 def askQuestion(text,context):
     url = 'http://localhost:11434/api/chat'
     context.append({"role":"user", "content": text})
-    payload = { "model": "llama3", "messages": context ,"stream": True}
+    payload = { "model": "llama3", "messages": context ,"stream": False}
     headers = {}
-    res = requests.post(url, data=json.dumps(payload), headers=headers, stream=True)
+    res = requests.post(url, data=json.dumps(payload), headers=headers, stream=False)
     finalAnswer = ""
 
     if res.status_code == 200:
@@ -45,7 +29,30 @@ def askQuestion(text,context):
         print(res.status_code)
     context.append({"role": "assistant", "content":finalAnswer})
     
-    return context
+    return content, context
+
+app = Flask(__name__)
+cors = CORS(app)
+app.config['CORS_HEADERS'] = 'Content-Type'
+# CORS(app, resources={r"/api/*": {"origins": "*"}})
+# @app.route("/members")
+# def members():
+#     return {"members": ["Member1","Member2","Member3"]}im 
+
+@app.route("/api/send", methods=["POST"])
+@cross_origin()
+def processInput():
+    data = request.json
+    print("Received data:", data)
+    text = data.get("value")
+    context = data.get("context")
+    content, context = askQuestion(text, [])
+    return jsonify({"message": content, "context": context }), 200
+
+
+if __name__ == "__main__":
+    app.run(debug=True, port=5050)
+ 
 
 # context = []
 # while True:

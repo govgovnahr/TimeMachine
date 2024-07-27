@@ -33,7 +33,7 @@ const InputComponent = ({onMessageListChange}) => {
             });
             const data = await response.json();
             console.log("Response:  ", data.message);
-            onMessageListChange(['assistant', data.message])
+            onMessageListChange({sender:'assistant', message: data.message, direction: 'incoming'})
             setContext(data.context)
         } catch (error) {
             console.error("Error sending data to server:   ", error)
@@ -54,25 +54,28 @@ const InputComponent = ({onMessageListChange}) => {
     const handleSubmit = (event) => {
         event.preventDefault();
         handleSend()
-        onMessageListChange(['user', input])
+        onMessageListChange({sender:'user',message: input, direction: 'outgoing'})
         setInput('')
     }
 
     return (
         <div>
-            <Paper onSubmit={handleSubmit} component='form' sx={{width:400, justifyContent:'center'}}>
+            <Paper onSubmit={handleSubmit} component='form' sx={{ p:'10px 0px 10px 0px', width:400,flex: 1, justifyContent:'center', backgroundColor: "#40414f"}}>
             <InputBase
                 type="text"
                 value={input}
+
+                autoFocus={true}
                 onChange={handleKeyPress}
                 // onKeyPress={handleKeyPress}
-                placeholder={loading? 'Cooking a response...': 'Enter text'}
+                placeholder={loading? 'Llama is typing...': 'Enter text'}
                 sx={{
-                    p: '0px 20px 0px 20px'
+                    color: "white"
+                    
                 }}
                 disabled={loading}
             />
-                <IconButton onClick={handleSend} sx={{p:'10px 10px 10px 40px'}} aria-label='Send'><Send/></IconButton>
+                <IconButton onClick={handleSend} sx={{ right:-50, color: "white", backgroundColor: 'cyan'}} aria-label='Send'><Send/></IconButton>
             
             {/* <Button onClick={handleSend} disableElevation>Send</Button> */}
             </Paper>

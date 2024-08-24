@@ -4,7 +4,6 @@ import InputComponent from './components/InputComponent';
 // import styles from '@chatscope/chat-ui-kit-styles/dist/default/styles.min.css';
 import ChatWindowComponent from './components/ChatWindowComponent';
 import styles from "@chatscope/chat-ui-kit-styles/dist/default/styles.min.css";
-import {MainContainer, ChatContainer, MessageList, Message, MessageInput, TypingIndicator} from "@chatscope/chat-ui-kit-react"
 
 function App() {
     
@@ -13,7 +12,7 @@ function App() {
 
     
     return (
-    <div className="App">
+    <div className="App" sx={{flexDirection: 'row'}}>
         <ChatWindowComponent/>
     </div>
     )

@@ -7,6 +7,7 @@ from flask_cors import CORS, cross_origin
 
 def askQuestion(text,context):
     url = 'http://localhost:11434/api/chat'
+    print("CONTEXT:  ", context)
     context.append({"role":"user", "content": text})
     payload = { "model": "llama3", "messages": context ,"stream": False}
     headers = {}
@@ -46,8 +47,16 @@ def processInput():
     print("Received data:", data)
     text = data.get("value")
     context = data.get("context")
-    content, context = askQuestion(text, [])
-    return jsonify({"message": content, "context": context }), 200
+    content, context2 = askQuestion(text, context)
+    return jsonify({"message": content, "context": context2 }), 200
+
+@app.route("/api/context", methods=["POST"])
+@cross_origin()
+def setContext():
+    data = request.json
+    print("Received system prompt data:  ", data)
+    text = data.get("value")
+    return text
 
 
 if __name__ == "__main__":

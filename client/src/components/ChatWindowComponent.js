@@ -1,6 +1,6 @@
 import React, {useState} from 'react'
 
-import InputComponent from './InputComponent.js';
+import SidebarComponent from './SidebarComponent.js';
 import {
     TextField,
     Button,
@@ -12,12 +12,12 @@ import {
 import {
     Send
 } from '@mui/icons-material'
-
+import styles from "@chatscope/chat-ui-kit-styles/dist/default/styles.min.css";
 
 import {MainContainer, ChatContainer, MessageList, Message, MessageInput, TypingIndicator} from "@chatscope/chat-ui-kit-react"
 
 const ChatWindowComponent = () => {
-    const [context, setContext] = useState([])
+    const [context, setContext] = useState([{'role'}])
     const [loading, setLoading] = useState(false)
     const [messages, setMessages] = useState([]);
     
@@ -35,6 +35,16 @@ const ChatWindowComponent = () => {
         await getMessage(temp)
         
     };
+
+    const changeContext = (systemMessage) => {
+        const newMessage = {
+            'role': 'system',
+            'content': systemMessage
+        }
+        setContext([newMessage])
+        console.log("CONTEXT:   ", context)
+        setMessages([])
+    }
 
     async function getMessage(chatMessages) {
         try {
@@ -59,21 +69,24 @@ const ChatWindowComponent = () => {
     }
 
     return (
-        <div className='chatWindow' style={{ position:"relative", height: '100vh'}}>
-        <MainContainer>
-            <ChatContainer>
-            <MessageList 
-                scrollBehavior="smooth" 
-                typingIndicator={loading ? <TypingIndicator content="ChatGPT is typing" /> : null}
-            >
-                {messages.map((message, i) => {
-                console.log(message)
-                return <Message key={i} model={message} />
-                })}
-            </MessageList>
-            <MessageInput placeholder="Type message here" onSend={handleSend} />        
-            </ChatContainer>
-        </MainContainer>
+        <div className="mainBody" style={{display: 'flex', flexDirection:"row"}}>
+            <SidebarComponent onContextChange={changeContext}/>
+            <div className='chatWindow' style={{ position:"relative",height:'100vh', width: '120vw'}}>
+                <MainContainer>
+                    <ChatContainer>
+                        <MessageList 
+                            scrollBehavior="smooth" 
+                            typingIndicator={loading ? <TypingIndicator content="Your Mom is typing" /> : null}
+                        >
+                            {messages.map((message, i) => {
+                            console.log(message)
+                            return <Message key={i} model={message} />
+                            })}
+                        </MessageList>
+                        <MessageInput placeholder="Type message here" onSend={handleSend} />        
+                    </ChatContainer>
+                </MainContainer>
+            </div>
         </div>
     )
 

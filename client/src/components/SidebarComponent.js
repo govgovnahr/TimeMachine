@@ -1,33 +1,34 @@
 import React, {useState} from 'react'
-
-import InputComponent from './InputComponent.js';
+import Datetime from 'react-datetime'
+import "react-datetime/css/react-datetime.css";
+import DateTimePicker from 'react-datetime-picker';
+import dayjs from 'dayjs';
+import moment from 'moment'
 import {
     TextField,
     Button,
+    Input,
     InputBase,
     IconButton,
     Paper,
-    Input,
+    OutlinedInput,
     Typography
 } from '@mui/material'
-import {
-    Send
-} from '@mui/icons-material'
-import styles from "@chatscope/chat-ui-kit-styles/dist/default/styles.min.css";
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 
-import {MainContainer, ChatContainer, MessageList, Message, MessageInput, TypingIndicator} from "@chatscope/chat-ui-kit-react"
 
+moment().format()
 
 const SidebarComponent = ({onContextChange}) => {
     const [region, setRegion] = useState("")
-    const [year, setYear] = useState(2000)
+    const [year, setYear] = useState('2024')
 
     const handleSubmit = (event) => {
         console.log("Region",region)
         console.log("Year", year)
         event.preventDefault();
         let systemMessage = ''
-        systemMessage = "You are a helpful, friendly, regular citizen of " + region + " in the year " + year.slice(0,4) + " . You are unaware of any events or technological advances that occurred after this date. Speak in a manner that aligns with these parameters. Keep the conversation light and educational; your goal is to inform whomever you may be speaking with about the era and region. Additionally, keep responses to 1-2 paragraphs in length."
+        systemMessage = "You are a helpful, friendly, regular citizen of " + region + " in the year " + year + " . You are unaware of any events or technological advances that occurred after this date. Speak in a manner that aligns with these parameters. Keep the conversation light and educational; your goal is to inform whomever you may be speaking with about the era and region. Additionally, keep responses to 1-2 paragraphs in length."
         onContextChange(systemMessage)
     }
 
@@ -43,12 +44,15 @@ const SidebarComponent = ({onContextChange}) => {
 
 
     return (
-        <div style={{paddingTop: 40}}>
+        <div style={{padding: 40}}>
             <Typography variant="h4">Settings</Typography>
-            <div className='inputRecipe' style={{alignItems: 'justify'}}>
-                <Input onChange={handleChangeRegion} placeholder="Country/Region" sx={{color: 'white'}}/>
-                <Input onInput={handleChangeTime} placeholder="Year" type='date'sx={{color: 'white'}}/>
-                <IconButton onClick={handleSubmit} aria-label='Send'sx={{color: 'white'}}><Send/></IconButton>
+            <div className='settings' style={{alignItems: 'justify', padding: 3, display:'flex', flexDirection: 'column'}}>
+                <Input onChange={handleChangeRegion} placeholder="Country/Region"  sx={{color: 'white', marginBottom: 2}} />
+                <DatePicker minDate={dayjs("01/01/1000")} onChange={(date) => setYear(date.year().toString())} label={"Year"} yearsPerRow={4} disableFuture views={["year"]} sx={{color:'white'}}/>
+                <Input onChange={handleChangeTime} placeholder="Or enter earlier year"  sx={{color: 'white', marginBottom: 2}} />
+                {/* <Datetime onChange={(date) => setYear(date.year())} dateFormat='YYYY' sx={{color: 'red'}}/> */}
+                {/* <DateTimePicker onChange={(date) => setYear(date.year())} dateFormat='y' sx={{color: 'red'}}/> */}
+                <Button onClick={handleSubmit} aria-label='Send'sx={{color: 'white', marginTop: 2}} variant='contained'>CONFIRM</Button>
             </div>
         </div>
     )

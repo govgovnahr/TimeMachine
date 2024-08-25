@@ -1,7 +1,7 @@
 How to make it work:
 
 You will need to install ollama here: https://ollama.com/ .
-Choose whichever model you would like.
+Choose whichever model you like, as long as it is v2 or above it should work.
 
 Clone the repo to your machine. Navigate to `TimeMachine/server` and start the server: `python test.py`
 resolve any missing libraries, you will likely need to install Flask `pip install flask` and Flask_CORS `pip install flask_cors`

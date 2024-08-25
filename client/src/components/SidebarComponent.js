@@ -45,7 +45,7 @@ const SidebarComponent = ({onContextChange}) => {
 
     return (
         <div style={{padding: 40}}>
-            <Typography variant="h4">Settings</Typography>
+            <Typography variant="h4">Time Machine</Typography>
             <div className='settings' style={{alignItems: 'justify', padding: 3, display:'flex', flexDirection: 'column'}}>
                 <Input onChange={handleChangeRegion} placeholder="Country/Region"  sx={{color: 'white', marginBottom: 2}} />
                 <DatePicker minDate={dayjs("01/01/1000")} onChange={(date) => setYear(date.year().toString())} label={"Year"} yearsPerRow={4} disableFuture views={["year"]} sx={{color:'white'}}/>

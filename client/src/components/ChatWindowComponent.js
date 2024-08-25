@@ -17,7 +17,7 @@ import styles from "@chatscope/chat-ui-kit-styles/dist/default/styles.min.css";
 import {MainContainer, ChatContainer, MessageList, Message, MessageInput, TypingIndicator} from "@chatscope/chat-ui-kit-react"
 
 const ChatWindowComponent = () => {
-    const [context, setContext] = useState([{'role'}])
+    const [context, setContext] = useState([{'role': 'system', "content": 'Inform users that you can emulate persons from a time period and geopolitical region that they choose, try and gently steer them to the settings panel on the left.'}])
     const [loading, setLoading] = useState(false)
     const [messages, setMessages] = useState([]);
     

@@ -6,7 +6,13 @@ import {
     Chip,
     Slider,
     Divider,
+    List,
+    ListItem,
+    ListItemButton,
+    ListItemText,
+    IconButton,
 } from '@mui/material'
+import DeleteIcon from '@mui/icons-material/Delete'
 
 
 const ALL_PRESETS = [
@@ -80,7 +86,15 @@ const textFieldSx = {
     '& .MuiFormHelperText-root': { color: 'rgba(240,234,214,0.45)' },
 }
 
-const SidebarComponent = ({onContextChange}) => {
+function formatTime(ts) {
+    const diff = Date.now() - ts
+    if (diff < 60000) return 'just now'
+    if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`
+    if (diff < 86400000) return `${Math.floor(diff / 3600000)}h ago`
+    return new Date(ts).toLocaleDateString()
+}
+
+const SidebarComponent = ({onContextChange, history = [], onLoadConversation, onDeleteConversation, loading = false}) => {
     const [presets] = useState(() => pickRandomPresets())
     const [region, setRegion] = useState("")
     const [year, setYear] = useState('2024')
@@ -150,6 +164,7 @@ const SidebarComponent = ({onContextChange}) => {
                         key={preset.label}
                         label={preset.label}
                         onClick={() => handlePresetClick(preset)}
+                        disabled={loading}
                         sx={{
                             color: 'rgba(240,234,214,0.7)',
                             borderColor: 'rgba(240,234,214,0.2)',
@@ -212,6 +227,7 @@ const SidebarComponent = ({onContextChange}) => {
                 <Button
                     onClick={handleSubmit}
                     aria-label='Send'
+                    disabled={loading}
                     sx={{
                         color: '#1a1c22',
                         marginTop: 2,
@@ -224,6 +240,43 @@ const SidebarComponent = ({onContextChange}) => {
                     CONFIRM
                 </Button>
             </div>
+
+            {history.length > 0 && (
+                <>
+                    <Divider sx={{ borderColor: 'rgba(255,255,255,0.08)', mt: 3, mb: 1.5 }} />
+                    <Typography variant="overline" sx={{ color: 'rgba(240,234,214,0.45)', letterSpacing: '0.1em', fontSize: '0.65rem' }}>
+                        HISTORY
+                    </Typography>
+                    <List dense disablePadding>
+                        {history.map(conv => (
+                            <ListItem key={conv.id} disablePadding
+                                secondaryAction={
+                                    <IconButton size="small" onClick={() => onDeleteConversation(conv.id)}>
+                                        <DeleteIcon sx={{ fontSize: 14, color: 'rgba(240,234,214,0.3)' }} />
+                                    </IconButton>
+                                }
+                            >
+                                <ListItemButton
+                                    onClick={() => onLoadConversation(conv)}
+                                    disabled={loading}
+                                    sx={{
+                                        borderRadius: 1,
+                                        pr: 4,
+                                        '&:hover': { backgroundColor: 'rgba(143,185,150,0.08)' },
+                                    }}
+                                >
+                                    <ListItemText
+                                        primary={conv.configLabel}
+                                        secondary={formatTime(conv.updatedAt)}
+                                        primaryTypographyProps={{ sx: { color: '#f0ead6', fontSize: '0.8rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }}
+                                        secondaryTypographyProps={{ sx: { color: 'rgba(240,234,214,0.35)', fontSize: '0.7rem' } }}
+                                    />
+                                </ListItemButton>
+                            </ListItem>
+                        ))}
+                    </List>
+                </>
+            )}
         </div>
         </div>
     )

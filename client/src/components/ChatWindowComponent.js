@@ -1,4 +1,5 @@
-import React, {useState, useRef} from 'react'
+import React, {useState, useRef, useEffect} from 'react'
+import { loadHistory, saveConversation, deleteConversation } from '../utils/history.js'
 
 import SidebarComponent from './SidebarComponent.js'
 import MessageListComponent from './MessageListComponent.js'
@@ -12,10 +13,12 @@ const BREAKPOINT = `(max-width: ${SIDEBAR_WIDTH + 360 - 1}px)`
 
 const ChatWindowComponent = () => {
     const [loading, setLoading] = useState(false)
+    const [streaming, setStreaming] = useState(false)
     const [messages, setMessages] = useState([])
     const [isConfigured, setIsConfigured] = useState(false)
     const [configLabel, setConfigLabel] = useState(null)
     const [drawerOpen, setDrawerOpen] = useState(false)
+    const [history, setHistory] = useState(() => loadHistory())
 
     // Stored as refs so getMessage always reads the latest value without stale closures
     const sessionIdRef = useRef(null)
@@ -24,13 +27,21 @@ const ChatWindowComponent = () => {
 
     const isMobile = useMediaQuery(BREAKPOINT)
 
+    // Auto-save after each completed assistant response
+    useEffect(() => {
+        if (!loading && messages.length >= 2 && sessionIdRef.current && configLabel) {
+            saveConversation(sessionIdRef.current, configLabel, systemPromptRef.current, messages)
+            setHistory(loadHistory())
+        }
+    }, [loading]) // eslint-disable-line react-hooks/exhaustive-deps
+
     // Creates a new session on the server with the given system prompt.
     // The server stores the conversation history — the client only tracks the session ID.
-    const createSession = async (systemPrompt) => {
+    const createSession = async (systemPrompt, restoreContext = []) => {
         const res = await fetch("http://localhost:5050/api/session", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ system_prompt: systemPrompt }),
+            body: JSON.stringify({ system_prompt: systemPrompt, restore_context: restoreContext }),
         })
         const data = await res.json()
         sessionIdRef.current = data.session_id
@@ -41,7 +52,9 @@ const ChatWindowComponent = () => {
         const temp = [...messages, newMessage]
         setMessages(temp)
         setLoading(true)
+        setStreaming(true)
         await getMessage(temp)
+        setStreaming(false)
     }
 
     const handleStop = () => {
@@ -52,10 +65,30 @@ const ChatWindowComponent = () => {
         abortControllerRef.current?.abort()
         setMessages([])
         setLoading(false)
+        setStreaming(false)
         // Start a fresh session with the same time period
         if (systemPromptRef.current) {
             await createSession(systemPromptRef.current)
         }
+    }
+
+    const handleLoadConversation = async (conv) => {
+        abortControllerRef.current?.abort()
+        systemPromptRef.current = conv.systemPrompt
+        setMessages(conv.messages)
+        setConfigLabel(conv.configLabel)
+        setIsConfigured(false)
+        setDrawerOpen(false)
+        const restoreContext = conv.messages
+            .filter(m => !m.message.startsWith('⚠️'))
+            .map(m => ({ role: m.sender === 'user' ? 'user' : 'assistant', content: m.message }))
+        await createSession(conv.systemPrompt, restoreContext)
+        setIsConfigured(true)
+    }
+
+    const handleDeleteConversation = (id) => {
+        deleteConversation(id)
+        setHistory(loadHistory())
     }
 
     const changeContext = async (systemMessage, label) => {
@@ -168,11 +201,11 @@ const ChatWindowComponent = () => {
                         onClose={() => setDrawerOpen(false)}
                         PaperProps={{sx: {backgroundColor: '#22252e', width: SIDEBAR_WIDTH}}}
                     >
-                        <SidebarComponent onContextChange={changeContext} />
+                        <SidebarComponent onContextChange={changeContext} history={history} onLoadConversation={handleLoadConversation} onDeleteConversation={handleDeleteConversation} loading={streaming} />
                     </Drawer>
                 </>
             ) : (
-                <SidebarComponent onContextChange={changeContext} />
+                <SidebarComponent onContextChange={changeContext} history={history} onLoadConversation={handleLoadConversation} onDeleteConversation={handleDeleteConversation} loading={streaming} />
             )}
             <div className='chatWindow'>
                 {messages.length > 0 && (

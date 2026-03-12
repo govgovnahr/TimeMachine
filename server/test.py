@@ -21,8 +21,12 @@ MAX_MESSAGES = 20
 def createSession():
     data = request.json
     system_prompt = data.get("system_prompt")
+    restore_context = data.get("restore_context", [])
     session_id = str(uuid.uuid4())
-    sessions[session_id] = [{"role": "system", "content": system_prompt}]
+    context = [{"role": "system", "content": system_prompt}] + restore_context
+    if len(context) - 1 > MAX_MESSAGES:
+        context = [context[0]] + context[-MAX_MESSAGES:]
+    sessions[session_id] = context
     return json.dumps({"session_id": session_id})
 
 

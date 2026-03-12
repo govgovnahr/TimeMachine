@@ -1,73 +1,79 @@
 import requests
 import json
-from flask import Flask, request, jsonify
+import uuid
+from flask import Flask, request, Response, stream_with_context
 from flask_cors import CORS, cross_origin
 
-
-
-def askQuestion(text,context):
-    url = 'http://localhost:11434/api/chat'
-    print("CONTEXT:  ", context)
-    context.append({"role":"user", "content": text})
-    payload = { "model": "llama3", "messages": context ,"stream": False}
-    headers = {}
-    res = requests.post(url, data=json.dumps(payload), headers=headers, stream=False)
-    finalAnswer = ""
-
-    if res.status_code == 200:
-        try:
-            print(res)
-            for line in res.iter_lines():
-                if line:
-                    l = line.decode('utf-8')
-                    data = json.loads(l)
-                    content = data.get("message").get("content")
-                    finalAnswer += content
-                    print(content, end='')
-        except Exception as err:
-            print(err)
-    else:
-        print(res.status_code)
-    context.append({"role": "assistant", "content":finalAnswer})
-    
-    return content, context
 
 app = Flask(__name__)
 cors = CORS(app)
 app.config['CORS_HEADERS'] = 'Content-Type'
-# CORS(app, resources={r"/api/*": {"origins": "*"}})
-# @app.route("/members")
-# def members():
-#     return {"members": ["Member1","Member2","Member3"]}im 
+
+# Server-side session storage: { session_id: [{"role": ..., "content": ...}, ...] }
+sessions = {}
+
+# Keep system prompt + last N messages to stay within llama3's context window
+MAX_MESSAGES = 20
+
+
+@app.route("/api/session", methods=["POST"])
+@cross_origin()
+def createSession():
+    data = request.json
+    system_prompt = data.get("system_prompt")
+    session_id = str(uuid.uuid4())
+    sessions[session_id] = [{"role": "system", "content": system_prompt}]
+    return json.dumps({"session_id": session_id})
+
 
 @app.route("/api/send", methods=["POST"])
 @cross_origin()
 def processInput():
     data = request.json
-    print("Received data:", data)
     text = data.get("value")
-    context = data.get("context")
-    content, context2 = askQuestion(text, context)
-    return jsonify({"message": content, "context": context2 }), 200
+    session_id = data.get("session_id")
 
-@app.route("/api/context", methods=["POST"])
-@cross_origin()
-def setContext():
-    data = request.json
-    print("Received system prompt data:  ", data)
-    text = data.get("value")
-    return text
+    if session_id not in sessions:
+        return json.dumps({"error": "Session not found. Please reconfigure your time period."}), 404
+
+    context = sessions[session_id]
+    context.append({"role": "user", "content": text})
+
+    # Sliding window: always keep the system prompt, drop oldest messages if over limit
+    if len(context) - 1 > MAX_MESSAGES:
+        sessions[session_id] = [context[0]] + context[-(MAX_MESSAGES):]
+        context = sessions[session_id]
+
+    payload = {"model": "llama3", "messages": context, "stream": True}
+
+    def generate():
+        final_answer = ""
+        try:
+            with requests.post(
+                'http://localhost:11434/api/chat',
+                data=json.dumps(payload),
+                stream=True
+            ) as res:
+                for line in res.iter_lines():
+                    if line:
+                        chunk = json.loads(line.decode('utf-8'))
+                        content = chunk.get("message", {}).get("content", "")
+                        if content:
+                            final_answer += content
+                            yield f"data: {json.dumps({'content': content})}\n\n"
+        except Exception as err:
+            yield f"data: {json.dumps({'error': str(err)})}\n\n"
+            return
+
+        context.append({"role": "assistant", "content": final_answer})
+        yield f"data: {json.dumps({'done': True})}\n\n"
+
+    return Response(
+        stream_with_context(generate()),
+        mimetype='text/event-stream',
+        headers={'X-Accel-Buffering': 'no'}
+    )
 
 
 if __name__ == "__main__":
     app.run(debug=True, port=5050)
- 
-
-# context = []
-# while True:
-#     text = input("\nsend a message:  ")
-#     if text == "bye":
-#         break
-#     if text == "new":
-#         context = []
-#     context = askQuestion(text, context)

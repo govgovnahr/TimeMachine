@@ -1,42 +1,201 @@
+/* ── Global ── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+
+/* ── Layout shells ── */
 .App {
-  text-align: center;
-  background-color: #282c34;
-  color:white;
+  background-color: #1a1c22;
+  color: #f0ead6;
   position: absolute;
-  top:0; right:0; bottom: 0; left: 0;
+  top: 0; right: 0; bottom: 0; left: 0;
+  display: flex;
+  flex-direction: row;
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+.mainBody {
+  display: flex;
+  flex-direction: row;
+  height: 100vh;
+  width: 100%;
+  overflow: hidden;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
+.chatWindow {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  height: 100vh;
+  background-color: #1a1c22;
 }
 
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
+/* ── Message list ── */
+.messageListOuter {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px 16px 8px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(240,234,214,0.15) transparent;
+}
+
+.messageListOuter::-webkit-scrollbar {
+  width: 6px;
+}
+
+.messageListOuter::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.messageListOuter::-webkit-scrollbar-thumb {
+  background-color: rgba(240,234,214,0.15);
+  border-radius: 3px;
+}
+
+.messageListInner {
+  max-width: 720px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* ── Empty state ── */
+.emptyState {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
+  padding: 80px 16px;
+  gap: 12px;
 }
 
-.App-link {
-  color: #61dafb;
+.emptyStateIcon {
+  font-size: 2.5rem;
+  opacity: 0.5;
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.emptyStateText {
+  color: rgba(240,234,214,0.7);
+  font-size: 0.95rem;
+  margin: 0;
+}
+
+.emptyStateSubtext {
+  color: rgba(240,234,214,0.35);
+  font-size: 0.8rem;
+  margin: 4px 0 0;
+}
+
+/* ── Message rows + bubbles ── */
+.messageRow {
+  display: flex;
+}
+
+.messageRow.outgoing {
+  justify-content: flex-end;
+}
+
+.messageRow.incoming {
+  justify-content: flex-start;
+}
+
+.messageBubble {
+  max-width: 72%;
+  padding: 10px 14px;
+  border-radius: 16px;
+  font-size: 0.92rem;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.messageBubble.outgoing {
+  background-color: #8fb996;
+  color: #1a1c22;
+  border-bottom-right-radius: 4px;
+}
+
+.messageBubble.incoming {
+  background-color: #2c2f3a;
+  color: #f0ead6;
+  border-bottom-left-radius: 4px;
+}
+
+/* ── Typing dots ── */
+.typingBubble {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 12px 16px;
+  min-width: 56px;
+}
+
+.typingDot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background-color: rgba(240,234,214,0.55);
+  animation: blink 1s infinite;
+}
+
+@keyframes blink {
+  0%, 80%, 100% { opacity: 0.25; transform: scale(0.85); }
+  40% { opacity: 1; transform: scale(1); }
+}
+
+/* ── Input area ── */
+.inputArea {
+  flex-shrink: 0;
+  padding: 12px 16px 16px;
+  background: linear-gradient(to top, #1a1c22 80%, transparent);
+}
+
+.inputWrap {
+  max-width: 720px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background-color: #2c2f3a;
+  border-radius: 14px;
+  border: 1px solid rgba(240,234,214,0.12);
+  padding: 8px 8px 8px 14px;
+  transition: border-color 0.15s;
+}
+
+.inputWrap:focus-within {
+  border-color: #8fb996;
+}
+
+.inputWrapDisabled {
+  opacity: 0.6;
+}
+
+.chatTextarea {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  resize: none;
+  color: #f0ead6;
+  font-size: 0.92rem;
+  line-height: 1.5;
+  font-family: inherit;
+  max-height: 160px;
+  overflow-y: auto;
+  padding: 2px 0;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(240,234,214,0.15) transparent;
+}
+
+.chatTextarea::placeholder {
+  color: rgba(240,234,214,0.35);
+}
+
+.chatTextarea:disabled {
+  cursor: not-allowed;
 }
